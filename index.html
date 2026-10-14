@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where everyone is</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F8F9;--ink:#13213C;--mute:#5B6B7F;--line:#C9D5DB;--p:#2F4BD8;--r:#D6336C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Bricolage Grotesque",system-ui,sans-serif}
+.app{max-width:1280px;margin:0 auto;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:end}
+h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1;font-weight:800;letter-spacing:-.02em}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.sh{width:11px;height:11px;background:var(--p);border-radius:50%;display:inline-block}
+.sh.r{background:var(--r);border-radius:2px;transform:rotate(45deg) scale(.9)}
+#map{height:min(72vh,640px);border-radius:16px;border:1.5px solid var(--line);z-index:0}
+.pin{width:24px;height:24px;background:var(--p);border:3px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.pin.reunion{background:var(--r);border-radius:5px;transform:rotate(45deg)}
+#coords{margin:8px 2px 0;color:var(--mute);font-size:13px}
+aside{align-self:start}
+.empty{color:var(--mute);padding:10px 2px}
+/* person card: polaroid */
+.polaroid{background:#fff;padding:12px 12px 16px;box-shadow:0 6px 22px rgba(19,33,60,.18);transform:rotate(-1.5deg);border-radius:3px}
+.polaroid .cap{padding-top:12px}
+.polaroid h2{margin:0;font-size:24px;line-height:1.1;letter-spacing:-.01em}
+/* reunion card: postcard with a date stamp */
+.postcard{background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:14px;box-shadow:0 6px 22px rgba(19,33,60,.14);display:grid;gap:12px}
+.postcard .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2px dashed var(--line);padding-bottom:12px}
+.postcard h2{margin:0;font-size:24px;line-height:1.1}
+.stamp{flex:none;border:2px solid var(--r);color:var(--r);border-radius:4px;padding:5px 9px;text-align:center;line-height:1.05;transform:rotate(3deg)}
+.stamp b{display:block;font-size:26px;font-weight:800}
+.stamp span{font-size:12px}
+.meta{color:var(--mute);margin:3px 0 0}
+.ph{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,#7da0e8,#3b4a9a);display:grid;place-items:center;color:rgba(255,255,255,.85);font-size:70px;font-weight:800;overflow:hidden}
+.ph.r{background:linear-gradient(135deg,#f08ab0,#a22b5e)}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.thumbs img{width:54px;height:40px;object-fit:cover;border-radius:5px;cursor:pointer}
+.note{margin:10px 0 0}
+@media (max-width:880px){.app{grid-template-columns:1fr;padding:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Where everyone is</h1>
+    <div class="bar">
+      <button class="chip" data-f="all" aria-pressed="true">All</button>
+      <button class="chip" data-f="person" aria-pressed="false"><i class="sh"></i>People</button>
+      <button class="chip" data-f="reunion" aria-pressed="false"><i class="sh r"></i>Reunions</button>
+    </div>
+  </header>
+  <div><div id="map"></div><p id="coords">Click anywhere on the map to get its coordinates for pins.js.</p></div>
+  <aside id="card"><p class="empty">Select a pin to see its card.</p></aside>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="pins.js"></script>
+<script>
+const map = L.map('map', {worldCopyJump:true}).setView([30,10],2);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+PINS.forEach((p,i) => {
+  p.marker = L.marker([p.lat,p.lng], {
+    title: p.name,
+    icon: L.divIcon({className:'', html:'<div class="pin '+p.type+'"></div>', iconSize:[24,24], iconAnchor:[12,12]})
+  }).addTo(map).on('click', () => show(i));
+});
+
+function photos(p){
+  const list = p.photos || [], r = p.type==='reunion' ? ' r' : '';
+  const main = '<div class="ph'+r+'">'+esc(p.name.charAt(0))+(list[0]?'<img id="main" src="'+esc(list[0])+'" alt="Photo of '+esc(p.name)+'" onerror="this.remove()">':'')+'</div>';
+  const thumbs = list.length>1 ? '<div class="thumbs">'+list.map(s=>'<img src="'+esc(s)+'" alt="" onerror="this.remove()" onclick="var m=document.getElementById(\'main\');if(m)m.src=this.src">').join('')+'</div>' : '';
+  return main+thumbs;
+}
+
+function show(i){
+  const p = PINS[i], el = document.getElementById('card');
+  const note = p.note ? '<p class="note">'+esc(p.note)+'</p>' : '';
+  if(p.type==='reunion'){
+    const d = p.date ? new Date(p.date+'T00:00') : null;
+    const stamp = d ? '<div class="stamp"><b>'+d.getDate()+'</b><span>'+d.toLocaleDateString(undefined,{month:'short',year:'numeric'})+'</span></div>' : '';
+    el.innerHTML = '<div class="postcard"><div class="top"><div><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p></div>'+stamp+'</div>'+photos(p)+note+'</div>';
+  } else {
+    el.innerHTML = '<div class="polaroid">'+photos(p)+'<div class="cap"><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p>'+note+'</div></div>';
+  }
+  map.flyTo([p.lat,p.lng], Math.max(map.getZoom(),5));
+}
+
+document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-f]').forEach(c => c.setAttribute('aria-pressed', c===b));
+  PINS.forEach(p => (b.dataset.f==='all' || p.type===b.dataset.f) ? p.marker.addTo(map) : p.marker.remove());
+});
+
+map.on('click', e => {
+  const t = 'lat: '+e.latlng.lat.toFixed(3)+', lng: '+e.latlng.wrap().lng.toFixed(3)+',';
+  document.getElementById('coords').textContent = 'Clicked: '+t+'  (copy this into pins.js)';
+  if(navigator.clipboard) navigator.clipboard.writeText(t).catch(()=>{});
+});
+</script>
+</body>
+</html>
