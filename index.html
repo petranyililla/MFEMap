@@ -14,34 +14,51 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Bricolage Gr
 header{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:end}
 h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1;font-weight:800;letter-spacing:-.02em}
 .bar{display:flex;gap:8px;flex-wrap:wrap}
-.chip{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+button,input,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .sh{width:11px;height:11px;background:var(--p);border-radius:50%;display:inline-block}
 .sh.r{background:var(--r);border-radius:2px;transform:rotate(45deg) scale(.9)}
+.btn{border:0;background:var(--p);color:#fff;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:transparent;color:var(--r);border:1.5px solid var(--r)}
 #map{height:min(72vh,640px);border-radius:16px;border:1.5px solid var(--line);z-index:0}
+#map.place{cursor:crosshair}
 .pin{width:24px;height:24px;background:var(--p);border:3px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.45)}
 .pin.reunion{background:var(--r);border-radius:5px;transform:rotate(45deg)}
-#coords{margin:8px 2px 0;color:var(--mute);font-size:13px}
+.pin.tmp{opacity:.75;border-style:dashed}
 aside{align-self:start}
+.box{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px}
 .empty{color:var(--mute);padding:10px 2px}
-/* person card: polaroid */
 .polaroid{background:#fff;padding:12px 12px 16px;box-shadow:0 6px 22px rgba(19,33,60,.18);transform:rotate(-1.5deg);border-radius:3px}
 .polaroid .cap{padding-top:12px}
-.polaroid h2{margin:0;font-size:24px;line-height:1.1;letter-spacing:-.01em}
-/* reunion card: postcard with a date stamp */
+h2{margin:0;font-size:24px;line-height:1.1;letter-spacing:-.01em}
 .postcard{background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:14px;box-shadow:0 6px 22px rgba(19,33,60,.14);display:grid;gap:12px}
 .postcard .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2px dashed var(--line);padding-bottom:12px}
-.postcard h2{margin:0;font-size:24px;line-height:1.1}
 .stamp{flex:none;border:2px solid var(--r);color:var(--r);border-radius:4px;padding:5px 9px;text-align:center;line-height:1.05;transform:rotate(3deg)}
 .stamp b{display:block;font-size:26px;font-weight:800}
 .stamp span{font-size:12px}
 .meta{color:var(--mute);margin:3px 0 0}
+.note{margin:10px 0 0}
 .ph{position:relative;aspect-ratio:4/3;background:linear-gradient(135deg,#7da0e8,#3b4a9a);display:grid;place-items:center;color:rgba(255,255,255,.85);font-size:70px;font-weight:800;overflow:hidden}
 .ph.r{background:linear-gradient(135deg,#f08ab0,#a22b5e)}
 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .thumbs{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.thumbs img{width:54px;height:40px;object-fit:cover;border-radius:5px;cursor:pointer}
-.note{margin:10px 0 0}
+.thumbs img{width:54px;height:40px;object-fit:cover;border-radius:5px;cursor:pointer;display:block}
+.th{position:relative}
+.th button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:var(--ink);color:#fff;cursor:pointer;line-height:1;padding:0}
+.row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.f{display:block;margin:0 0 10px;font-size:13px;color:var(--mute)}
+.f input,.f textarea{display:block;width:100%;margin-top:3px;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);font-size:15px}
+.seg{display:flex;gap:8px;margin:10px 0 12px}
+.seg label{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;display:flex;gap:7px;justify-content:center;align-items:center}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--ink);background:var(--bg);font-weight:600}
+.seg label:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
+.loc{font-size:13px;color:var(--mute);margin:4px 0}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-size:14px;max-width:90vw;display:none;z-index:9999}
 @media (max-width:880px){.app{grid-template-columns:1fr;padding:12px}}
 </style>
 </head>
@@ -53,56 +70,149 @@ aside{align-self:start}
       <button class="chip" data-f="all" aria-pressed="true">All</button>
       <button class="chip" data-f="person" aria-pressed="false"><i class="sh"></i>People</button>
       <button class="chip" data-f="reunion" aria-pressed="false"><i class="sh r"></i>Reunions</button>
+      <button class="btn" id="add" hidden>Add pin</button>
+      <button class="btn ghost" id="auth">Sign in</button>
     </div>
   </header>
-  <div><div id="map"></div><p id="coords">Click anywhere on the map to get its coordinates for pins.js.</p></div>
-  <aside id="card"><p class="empty">Select a pin to see its card.</p></aside>
+  <div id="map"></div>
+  <aside id="panel"></aside>
 </div>
+<div id="toast" role="status"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="pins.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+// ===== PASTE YOUR TWO SUPABASE VALUES HERE =====
+const SUPABASE_URL = 'https://fbftkabcjvpjamxguoaq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Ht2dPp6Ia6_lU0rV0u80uA_hKH_8B63';
+// ===============================================
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const configured = !SUPABASE_URL.startsWith('PASTE');
+const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let PINS = [], user = null, mode = 'list', sel = null, filter = 'all', draft = null, confirmDel = false;
+
 const map = L.map('map', {worldCopyJump:true}).setView([30,10],2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+const group = L.layerGroup().addTo(map);
+let tmp = null;
+const icon = (t,x) => L.divIcon({className:'', html:'<div class="pin '+t+' '+(x||'')+'"></div>', iconSize:[24,24], iconAnchor:[12,12]});
 
-const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',4000)}
+const fmtDay = d => new Date(d+'T00:00');
 
-PINS.forEach((p,i) => {
-  p.marker = L.marker([p.lat,p.lng], {
-    title: p.name,
-    icon: L.divIcon({className:'', html:'<div class="pin '+p.type+'"></div>', iconSize:[24,24], iconAnchor:[12,12]})
-  }).addTo(map).on('click', () => show(i));
-});
-
-function photos(p){
-  const list = p.photos || [], r = p.type==='reunion' ? ' r' : '';
-  const main = '<div class="ph'+r+'">'+esc(p.name.charAt(0))+(list[0]?'<img id="main" src="'+esc(list[0])+'" alt="Photo of '+esc(p.name)+'" onerror="this.remove()">':'')+'</div>';
-  const thumbs = list.length>1 ? '<div class="thumbs">'+list.map(s=>'<img src="'+esc(s)+'" alt="" onerror="this.remove()" onclick="var m=document.getElementById(\'main\');if(m)m.src=this.src">').join('')+'</div>' : '';
-  return main+thumbs;
+function markers(){
+  group.clearLayers();
+  PINS.filter(p => filter==='all' || p.type===filter).forEach(p =>
+    L.marker([p.lat,p.lng], {title:p.name, icon:icon(p.type)}).addTo(group).on('click', () => openPin(p.id)));
 }
+function openPin(id){const p=PINS.find(x=>x.id===id);if(!p)return;sel=id;mode='card';confirmDel=false;clearTmp();render();map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),5))}
+function clearTmp(){if(tmp){tmp.remove();tmp=null}}
+function setTmp(){clearTmp();if(draft&&draft.lat!=null){tmp=L.marker([draft.lat,draft.lng],{icon:icon(draft.type,'tmp'),draggable:true}).addTo(map);
+  tmp.on('dragend',()=>{const ll=tmp.getLatLng();draft.lat=+ll.lat.toFixed(4);draft.lng=+ll.wrap().lng.toFixed(4);locText()})}}
 
-function show(i){
-  const p = PINS[i], el = document.getElementById('card');
-  const note = p.note ? '<p class="note">'+esc(p.note)+'</p>' : '';
+function photosHTML(p){
+  const list=p.photos||[], r=p.type==='reunion'?' r':'';
+  return '<div class="ph'+r+'">'+esc(p.name.charAt(0))+(list[0]?'<img id="main" src="'+esc(list[0])+'" alt="Photo of '+esc(p.name)+'" onerror="this.remove()">':'')+'</div>'+
+   (list.length>1?'<div class="thumbs">'+list.map(s=>'<img data-src="'+esc(s)+'" src="'+esc(s)+'" alt="" onerror="this.remove()">').join('')+'</div>':'');
+}
+function cardHTML(p){
+  const note=p.note?'<p class="note">'+esc(p.note)+'</p>':'';
+  let h;
   if(p.type==='reunion'){
-    const d = p.date ? new Date(p.date+'T00:00') : null;
-    const stamp = d ? '<div class="stamp"><b>'+d.getDate()+'</b><span>'+d.toLocaleDateString(undefined,{month:'short',year:'numeric'})+'</span></div>' : '';
-    el.innerHTML = '<div class="postcard"><div class="top"><div><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p></div>'+stamp+'</div>'+photos(p)+note+'</div>';
-  } else {
-    el.innerHTML = '<div class="polaroid">'+photos(p)+'<div class="cap"><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p>'+note+'</div></div>';
-  }
-  map.flyTo([p.lat,p.lng], Math.max(map.getZoom(),5));
+    const d=p.date?fmtDay(p.date):null;
+    const st=d?'<div class="stamp"><b>'+d.getDate()+'</b><span>'+d.toLocaleDateString(undefined,{month:'short',year:'numeric'})+'</span></div>':'';
+    h='<div class="postcard"><div class="top"><div><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p></div>'+st+'</div>'+photosHTML(p)+note+'</div>';
+  } else h='<div class="polaroid">'+photosHTML(p)+'<div class="cap"><h2>'+esc(p.name)+'</h2><p class="meta">'+esc(p.place)+'</p>'+note+'</div></div>';
+  if(user) h+='<div class="row"><button class="btn ghost" data-act="edit">Edit</button><button class="btn danger" data-act="del">'+(confirmDel?'Tap again to delete':'Delete')+'</button></div>';
+  return h;
 }
-
-document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
-  document.querySelectorAll('[data-f]').forEach(c => c.setAttribute('aria-pressed', c===b));
-  PINS.forEach(p => (b.dataset.f==='all' || p.type===b.dataset.f) ? p.marker.addTo(map) : p.marker.remove());
+function thumbsHTML(){
+  const d=draft;
+  return d.photos.map((s,i)=>'<span class="th"><img src="'+esc(s)+'" alt=""><button data-rm="old" data-i="'+i+'" aria-label="Remove photo">×</button></span>').join('')+
+         d.newPhotos.map((n,i)=>'<span class="th"><img src="'+n.url+'" alt=""><button data-rm="new" data-i="'+i+'" aria-label="Remove photo">×</button></span>').join('');
+}
+function formHTML(){
+  const d=draft, rn=d.type==='reunion';
+  return '<div class="box"><h2>'+(d.id?'Edit pin':'New pin')+'</h2>'+
+  '<div class="seg" role="radiogroup" aria-label="Pin type"><label><input type="radio" name="t" value="person"'+(rn?'':' checked')+'><i class="sh"></i>Person</label><label><input type="radio" name="t" value="reunion"'+(rn?' checked':'')+'><i class="sh r"></i>Reunion</label></div>'+
+  '<label class="f">Name or title<input id="fn" maxlength="60" value="'+esc(d.name)+'"></label>'+
+  '<label class="f">Place<input id="fp" maxlength="80" placeholder="City, country" value="'+esc(d.place)+'"></label>'+
+  '<label class="f" id="fdw"'+(rn?'':' hidden')+'>Date<input id="fd" type="date" value="'+esc(d.date)+'"></label>'+
+  '<label class="f">Note<textarea id="fnote" rows="3" maxlength="300">'+esc(d.note)+'</textarea></label>'+
+  '<label class="f">Add photos<input id="fph" type="file" accept="image/*" multiple></label><div class="thumbs" id="fth">'+thumbsHTML()+'</div>'+
+  '<p class="loc" id="loc"></p><div class="row"><button class="btn" id="save">Save pin</button><button class="btn ghost" data-act="cancel">Cancel</button></div></div>';
+}
+function loginHTML(){
+  return '<div class="box"><h2>Sign in</h2><p class="meta">Only signed-in people can add or change pins.</p>'+
+  '<label class="f">Email<input id="le" type="email" autocomplete="username"></label><label class="f">Password<input id="lp" type="password" autocomplete="current-password"></label>'+
+  '<div class="row"><button class="btn" id="dologin">Sign in</button><button class="btn ghost" data-act="cancel">Cancel</button></div></div>';
+}
+function render(){
+  const el=$('#panel'); $('#map').classList.toggle('place',mode==='form');
+  $('#add').hidden=!user; $('#auth').textContent=user?'Sign out':'Sign in';
+  if(!configured){el.innerHTML='<div class="box"><h2>Almost there</h2><p class="meta">Paste your Supabase URL and key at the top of index.html.</p></div>';return}
+  const p=PINS.find(x=>x.id===sel);
+  if(mode==='login'){el.innerHTML=loginHTML();$('#le').focus();$('#dologin').onclick=login;$('#lp').onkeydown=e=>{if(e.key==='Enter')login()}}
+  else if(mode==='form'){el.innerHTML=formHTML();bindForm()}
+  else if(mode==='card'&&p)el.innerHTML=cardHTML(p);
+  else{mode='list';el.innerHTML='<p class="empty">'+(PINS.length?'Select a pin to see its card.':'No pins yet.'+(user?' Choose Add pin to make the first one.':' Sign in to add the first one.'))+'</p>'}
+}
+function locText(){const d=draft,l=$('#loc');if(l)l.textContent=d.lat==null?'Click the map to place the pin.':'Location set ('+d.lat+'°, '+d.lng+'°). Click the map or drag the marker to move it.'}
+function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>res(b),'image/jpeg',.8)};im.onerror=()=>res(null);im.src=r.result};r.onerror=()=>res(null);r.readAsDataURL(file)})}
+function bindForm(){
+  const d=draft;
+  document.querySelectorAll('[name=t]').forEach(r=>r.onchange=()=>{d.type=r.value;$('#fdw').hidden=r.value!=='reunion';setTmp()});
+  $('#fph').onchange=async e=>{for(const f of e.target.files){if(d.photos.length+d.newPhotos.length>=6)break;const b=await shrink(f);if(b)d.newPhotos.push({blob:b,url:URL.createObjectURL(b)})}e.target.value='';$('#fth').innerHTML=thumbsHTML()};
+  $('#fth').onclick=e=>{const b=e.target.closest('[data-rm]');if(!b)return;(b.dataset.rm==='old'?d.photos:d.newPhotos).splice(+b.dataset.i,1);$('#fth').innerHTML=thumbsHTML()};
+  $('#save').onclick=save;locText();setTmp();$('#fn').focus();
+}
+async function save(){
+  const d=draft,name=$('#fn').value.trim();
+  if(!name){toast('Add a name or title first.');return}
+  if(d.lat==null){toast('Click the map to place the pin.');return}
+  const b=$('#save');b.disabled=true;b.textContent='Saving…';
+  try{
+    const urls=[...d.photos];
+    for(const n of d.newPhotos){const path=crypto.randomUUID()+'.jpg';
+      const {error}=await sb.storage.from('photos').upload(path,n.blob,{contentType:'image/jpeg'});if(error)throw error;
+      urls.push(sb.storage.from('photos').getPublicUrl(path).data.publicUrl)}
+    const row={type:d.type,name,place:$('#fp').value.trim(),date:d.type==='reunion'?($('#fd').value||null):null,note:$('#fnote').value.trim(),lat:d.lat,lng:d.lng,photos:urls};
+    const q=d.id?sb.from('pins').update(row).eq('id',d.id):sb.from('pins').insert(row);
+    const {data,error}=await q.select().single();if(error)throw error;
+    PINS=PINS.filter(x=>x.id!==data.id);PINS.push(data);draft=null;markers();openPin(data.id);
+  }catch(e){toast('Could not save: '+(e.message||e));b.disabled=false;b.textContent='Save pin'}
+}
+async function del(){
+  const p=PINS.find(x=>x.id===sel);if(!p)return;
+  const {error}=await sb.from('pins').delete().eq('id',p.id);if(error){toast('Could not delete: '+error.message);return}
+  const names=(p.photos||[]).map(u=>u.split('/').pop());if(names.length)sb.storage.from('photos').remove(names);
+  PINS=PINS.filter(x=>x.id!==p.id);sel=null;mode='list';markers();render();toast('Pin deleted');
+}
+async function login(){
+  const {error}=await sb.auth.signInWithPassword({email:$('#le').value.trim(),password:$('#lp').value});
+  if(error)toast('Sign-in failed: '+error.message);
+}
+$('#panel').addEventListener('click',e=>{
+  const t=e.target.closest('[data-src]');if(t){const m=$('#main');if(m)m.src=t.dataset.src;return}
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+  if(a==='cancel'){mode=sel&&PINS.find(x=>x.id===sel)&&draft&&draft.id?'card':'list';draft=null;clearTmp();render()}
+  else if(a==='edit'){const p=PINS.find(x=>x.id===sel);draft={id:p.id,type:p.type,name:p.name,place:p.place||'',date:p.date||'',note:p.note||'',lat:p.lat,lng:p.lng,photos:[...(p.photos||[])],newPhotos:[]};mode='form';render()}
+  else if(a==='del'){if(!confirmDel){confirmDel=true;b.textContent='Tap again to delete';setTimeout(()=>{confirmDel=false;if(b.isConnected)b.textContent='Delete'},3000)}else del()}
 });
+$('#add').onclick=()=>{draft={id:null,type:'person',name:'',place:'',date:'',note:'',lat:null,lng:null,photos:[],newPhotos:[]};mode='form';render()};
+$('#auth').onclick=async()=>{if(!configured)return;if(user){await sb.auth.signOut()}else{mode='login';render()}};
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll('[data-f]').forEach(c=>c.setAttribute('aria-pressed',c===b));markers()});
+map.on('click',e=>{if(mode!=='form')return;draft.lat=+e.latlng.lat.toFixed(4);draft.lng=+e.latlng.wrap().lng.toFixed(4);setTmp();locText()});
 
-map.on('click', e => {
-  const t = 'lat: '+e.latlng.lat.toFixed(3)+', lng: '+e.latlng.wrap().lng.toFixed(3)+',';
-  document.getElementById('coords').textContent = 'Clicked: '+t+'  (copy this into pins.js)';
-  if(navigator.clipboard) navigator.clipboard.writeText(t).catch(()=>{});
-});
+(async function start(){
+  render();if(!configured)return;
+  const {data:s}=await sb.auth.getSession();user=s.session?s.session.user:null;
+  sb.auth.onAuthStateChange((ev,session)=>{user=session?session.user:null;if(mode==='login'&&user)mode='list';if(!user&&mode==='form'){mode='list';draft=null;clearTmp()}render()});
+  const {data,error}=await sb.from('pins').select('*').order('created_at');
+  if(error)toast('Could not load pins: '+error.message);else{PINS=data;markers()}
+  render();
+})();
 </script>
 </body>
 </html>
